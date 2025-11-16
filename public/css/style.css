@@ -1630,8 +1630,8 @@ button {
 
 .trait-box .trait-label {
     font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-light);
+    font-weight: 500;
+    color: var(--text-muted);
     text-align: center;
     line-height: 1.2;
     transition: color 0.3s ease;
@@ -1640,6 +1640,28 @@ button {
 }
 
 .trait-box:hover .trait-label {
+    color: var(--white);
+}
+
+/* Dark mode overrides */
+body.dark-mode .trait-box .trait-label {
+    color: var(--white);
+}
+
+body.dark-mode .trait-box {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--accent-color);
+}
+
+body.dark-mode .trait-box:hover {
+    background: var(--accent-color);
+}
+
+body.dark-mode .trait-box i {
+    color: var(--accent-color);
+}
+
+body.dark-mode .trait-box:hover i {
     color: var(--white);
 }
 
