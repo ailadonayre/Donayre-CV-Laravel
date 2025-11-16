@@ -15,15 +15,17 @@
                         {{ $hasResumeData ? 'Edit Resume' : 'Create Resume' }}
                     </a>
                     <a href="{{ route('resume.public', $user->public_slug) }}" class="logout-link">Public View</a>
-                    <form action="{{ route('logout') }}" method="POST" style="display: inline;">
-                        @csrf
-                        <button type="submit" class="logout-link" style="background: none; border: none; cursor: pointer; padding: 4px 8px;">Log Out</button>
-                    </form>
+                    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="logout-link">Log Out</a>
                 </p>
             </div>
         </div>
     </div>
 </header>
+
+<!-- Hidden logout form -->
+<form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+    @csrf
+</form>
 
 <main class="main-content">
     <div class="container">

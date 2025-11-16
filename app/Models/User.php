@@ -75,7 +75,9 @@ class User extends Authenticatable
 
     public function userTechnologies()
     {
-        return $this->hasMany(UserTechnology::class)->orderBy('category', 'display_order');
+        return $this->hasMany(UserTechnology::class)
+            ->orderBy('category', 'asc')
+            ->orderBy('display_order', 'asc');
     }
 
     // Auto-generate public_slug on creation
