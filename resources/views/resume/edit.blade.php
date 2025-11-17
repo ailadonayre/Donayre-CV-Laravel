@@ -39,7 +39,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('resume.update') }}" class="resume-form" id="resumeForm">
+            <form method="POST" action="{{ route('resume.update') }}" class="resume-form" id="resumeForm" enctype="multipart/form-data">
                 @csrf
                 
                 <!-- Personal Information -->
@@ -159,7 +159,46 @@
 
                 <!-- CV PDF Section -->
                 <div class="form-section">
-                    <h3 class="section-title"></h3>
+                    <h3 class="section-title"><i class="fa-solid fa-file-pdf"></i> CV PDF Upload</h3>
+                    
+                    @if($user->cvPdf && $user->cvPdf->exists())
+                        <div class="current-cv-pdf">
+                            <div class="pdf-display">
+                                <i class="fa-solid fa-file-pdf" style="font-size: 2rem; color: var(--accent-color);"></i>
+                                <span>{{ $user->cvPdf->original_name }}</span>
+                                <a href="{{ $user->cvPdf->url }}" download class="btn-download-mini">
+                                    <i class="fa-solid fa-download"></i> Download
+                                </a>
+                            </div>
+                            <form method="POST" action="{{ route('cv.pdf.delete') }}" style="display: inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-remove-file" onclick="return confirm('Are you sure you want to delete your CV PDF?')">
+                                    <i class="fa-solid fa-trash"></i> Remove PDF
+                                </button>
+                            </form>
+                        </div>
+                    @endif
+                    
+                    <div class="form-group">
+                        <label class="form-label">Upload CV PDF (Optional)</label>
+                        <input 
+                            type="file" 
+                            name="cv_pdf" 
+                            class="form-input-file" 
+                            accept=".pdf,application/pdf"
+                            onchange="validatePdfFile(this)"
+                            id="cv_pdf_input"
+                        >
+                        <small class="form-note">
+                            <i class="fa-solid fa-info-circle"></i> Upload your CV in PDF format. Optional. Max size: 5MB
+                        </small>
+                        @error('cv_pdf')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                        <div id="pdf-error" class="error-message" style="display: none;"></div>
+                    </div>
+                </div>
 
                 <!-- Social Links -->
                 <div class="form-section">
@@ -200,6 +239,163 @@
                         >
                     </div>
                 </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary"><i class="fa-solid fa-save"></i> Update Resume</button>
+                    <a href="{{ route('home') }}" class="btn-secondary"><i class="fa-solid fa-arrow-left"></i> Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+@push('styles')
+<style>
+    .current-profile-picture, .current-cv-pdf {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .preview-image-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--accent-color);
+        margin-bottom: 10px;
+    }
+    
+    .pdf-display {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .btn-download-mini {
+        background: var(--accent-color);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn-download-mini:hover {
+        background: var(--accent-hover);
+    }
+    
+    .btn-remove-file {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn-remove-file:hover {
+        background: #c0392b;
+    }
+    
+    .form-input-file {
+        width: 100%;
+        padding: 12px;
+        border: 2px dashed var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-secondary);
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .form-input-file:hover {
+        border-color: var(--accent-color);
+    }
+    
+    .image-preview-container {
+        margin-top: 15px;
+        text-align: center;
+    }
+    
+    .error-message {
+        color: #e74c3c;
+        font-size: 0.9rem;
+        margin-top: 5px;
+        font-weight: 600;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    function previewImage(input) {
+        const preview = document.getElementById('image-preview');
+        const img = document.getElementById('preview-img');
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            
+            // Validate file type
+            if (!file.type.match('image/(jpeg|jpg|png)')) {
+                alert('Please select a valid image file (JPG, JPEG, or PNG)');
+                input.value = '';
+                preview.style.display = 'none';
+                return;
+            }
+            
+            // Validate file size (2MB)
+            if (file.size > 2048 * 1024) {
+                alert('Image size must be less than 2MB');
+                input.value = '';
+                preview.style.display = 'none';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                img.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    function validatePdfFile(input) {
+        const errorDiv = document.getElementById('pdf-error');
+        errorDiv.style.display = 'none';
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            
+            // Validate file type
+            if (file.type !== 'application/pdf') {
+                errorDiv.textContent = 'Please select a valid PDF file';
+                errorDiv.style.display = 'block';
+                input.value = '';
+                return false;
+            }
+            
+            // Validate file size (5MB)
+            if (file.size > 5120 * 1024) {
+                errorDiv.textContent = 'PDF size must be less than 5MB';
+                errorDiv.style.display = 'block';
+                input.value = '';
+                return false;
+            }
+        }
+        return true;
+    }
+</script>
+@endpush
+@endsection
 
                 <!-- Education Section -->
                 <div class="form-section">

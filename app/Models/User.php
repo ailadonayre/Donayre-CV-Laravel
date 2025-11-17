@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class User extends Authenticatable
@@ -43,7 +44,7 @@ class User extends Authenticatable
         'age' => 'integer',
     ];
 
-    // Relationships - Updated with descending order
+    // Relationships
     public function socialLinks()
     {
         return $this->hasMany(SocialLink::class)->orderBy('display_order');
@@ -86,13 +87,17 @@ class User extends Authenticatable
         return $this->hasMany(Attachment::class);
     }
 
-    // Get CV PDF attachment
+    /**
+     * Get CV PDF attachment
+     */
     public function cvPdf()
     {
         return $this->hasOne(Attachment::class)->where('file_type', 'cv_pdf')->latest();
     }
 
-    // Auto-generate public_slug on creation
+    /**
+     * Auto-generate public_slug on creation
+     */
     protected static function boot()
     {
         parent::boot();
@@ -104,6 +109,9 @@ class User extends Authenticatable
         });
     }
 
+    /**
+     * Generate unique slug
+     */
     public static function generateUniqueSlug($username)
     {
         $slug = Str::slug($username);
@@ -118,7 +126,9 @@ class User extends Authenticatable
         return $slug;
     }
 
-    // Helper to check if user has resume data
+    /**
+     * Check if user has resume data
+     */
     public function hasResumeData()
     {
         return !empty($this->fullname) || 
@@ -128,11 +138,15 @@ class User extends Authenticatable
                $this->userTechnologies()->exists();
     }
 
-    // Get profile picture URL or default
-    public function getProfilePictureUrlAttribute()
+    /**
+     * Get profile picture URL or null
+     * 
+     * @return string|null
+     */
+    public function getProfilePictureUrlAttribute(): ?string
     {
-        if ($this->profile_picture && \Storage::disk('public')->exists($this->profile_picture)) {
-            return asset('storage/' . $this->profile_picture);
+        if ($this->profile_picture && Storage::disk('public')->exists($this->profile_picture)) {
+            return Storage::url($this->profile_picture);
         }
         return null;
     }
