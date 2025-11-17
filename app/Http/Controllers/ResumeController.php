@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class ResumeController extends Controller
 {
@@ -73,72 +74,73 @@ class ResumeController extends Controller
      */
     public function update(Request $request)
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        // Validate basic personal information with character limits
-        $validated = $request->validate([
-            'fullname' => 'required|string|max:100',
-            'title' => 'nullable|string|max:100',
-            'email' => 'required|email|max:100|unique:users,email,' . $user->id,
-            'contact' => 'nullable|string|max:50',
-            'address' => 'required|string|max:255',
-            'age' => 'required|integer|min:0|max:150',
-            
-            // Profile picture
-            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            
-            // CV PDF
-            'cv_pdf' => 'nullable|file|mimes:pdf|max:10240',
-            
-            // Social links
-            'linkedin' => 'nullable|url|max:255',
-            'github' => 'nullable|url|max:255',
-            'custom_link' => 'nullable|url|max:255',
-            
-            // Section flags
-            'has_education' => 'nullable|string|in:yes,no',
-            'has_experience' => 'nullable|string|in:yes,no',
-            'has_achievements' => 'nullable|string|in:yes,no',
-            
-            // Education (arrays)
-            'education_degree.*' => 'nullable|string|max:200',
-            'education_institution.*' => 'nullable|string|max:200',
-            'education_start.*' => 'nullable|string|max:50',
-            'education_end.*' => 'nullable|string|max:50',
-            'education_description.*' => 'nullable|string|max:2000',
-            
-            // Experience (arrays)
-            'experience_title.*' => 'nullable|string|max:200',
-            'experience_company.*' => 'nullable|string|max:200',
-            'experience_start.*' => 'nullable|string|max:50',
-            'experience_end.*' => 'nullable|string|max:50',
-            'experience_description.*' => 'nullable|string|max:2000',
-            'experience_keywords.*' => 'nullable|string|max:500',
-            
-            // Achievements (arrays)
-            'achievement_title.*' => 'nullable|string|max:200',
-            'achievement_date.*' => 'nullable|string|max:50',
-            'achievement_description.*' => 'nullable|string|max:2000',
-            'achievement_icon.*' => 'nullable|string|max:50',
-            
-            // Global experience traits
-            'experience_traits_global.*' => 'nullable|string|max:250',
-            
-            // Technologies (arrays per category)
-            'tech_frontend.*' => 'nullable|string|max:100',
-            'tech_backend.*' => 'nullable|string|max:100',
-            'tech_databases.*' => 'nullable|string|max:100',
-            'tech_devops.*' => 'nullable|string|max:100',
-            'tech_multimedia.*' => 'nullable|string|max:100',
-            'tech_mobile.*' => 'nullable|string|max:100',
-            'tech_testing.*' => 'nullable|string|max:100',
-        ]);
-
-        DB::beginTransaction();
-
         try {
+            /** @var User $user */
+            $user = Auth::user();
+
+            // Validate basic personal information with character limits
+            $validated = $request->validate([
+                'fullname' => 'required|string|max:100',
+                'title' => 'nullable|string|max:100',
+                'email' => 'required|email|max:100|unique:users,email,' . $user->id,
+                'contact' => 'nullable|string|max:50',
+                'address' => 'required|string|max:255',
+                'age' => 'required|integer|min:0|max:150',
+                
+                // Profile picture
+                'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+                
+                // CV PDF
+                'cv_pdf' => 'nullable|file|mimes:pdf|max:10240',
+                
+                // Social links
+                'linkedin' => 'nullable|url|max:255',
+                'github' => 'nullable|url|max:255',
+                'custom_link' => 'nullable|url|max:255',
+                
+                // Section flags
+                'has_education' => 'nullable|string|in:yes,no',
+                'has_experience' => 'nullable|string|in:yes,no',
+                'has_achievements' => 'nullable|string|in:yes,no',
+                
+                // Education (arrays)
+                'education_degree.*' => 'nullable|string|max:200',
+                'education_institution.*' => 'nullable|string|max:200',
+                'education_start.*' => 'nullable|string|max:50',
+                'education_end.*' => 'nullable|string|max:50',
+                'education_description.*' => 'nullable|string|max:2000',
+                
+                // Experience (arrays)
+                'experience_title.*' => 'nullable|string|max:200',
+                'experience_company.*' => 'nullable|string|max:200',
+                'experience_start.*' => 'nullable|string|max:50',
+                'experience_end.*' => 'nullable|string|max:50',
+                'experience_description.*' => 'nullable|string|max:2000',
+                'experience_keywords.*' => 'nullable|string|max:500',
+                
+                // Achievements (arrays)
+                'achievement_title.*' => 'nullable|string|max:200',
+                'achievement_date.*' => 'nullable|string|max:50',
+                'achievement_description.*' => 'nullable|string|max:2000',
+                'achievement_icon.*' => 'nullable|string|max:50',
+                
+                // Global experience traits
+                'experience_traits_global.*' => 'nullable|string|max:250',
+                
+                // Technologies (arrays per category)
+                'tech_frontend.*' => 'nullable|string|max:100',
+                'tech_backend.*' => 'nullable|string|max:100',
+                'tech_databases.*' => 'nullable|string|max:100',
+                'tech_devops.*' => 'nullable|string|max:100',
+                'tech_multimedia.*' => 'nullable|string|max:100',
+                'tech_mobile.*' => 'nullable|string|max:100',
+                'tech_testing.*' => 'nullable|string|max:100',
+            ]);
+
+            DB::beginTransaction();
+
             // Handle profile picture upload
+            $profilePicturePath = $user->profile_picture;
             if ($request->hasFile('profile_picture')) {
                 // Delete old profile picture if exists
                 if ($user->profile_picture) {
@@ -148,7 +150,7 @@ class ResumeController extends Controller
                 $file = $request->file('profile_picture');
                 $filename = 'profile_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
                 $path = $file->storeAs('profile_pictures', $filename, 'public');
-                $validated['profile_picture'] = $path;
+                $profilePicturePath = $path;
             }
 
             // Update basic user information
@@ -159,7 +161,7 @@ class ResumeController extends Controller
                 'contact' => $validated['contact'],
                 'address' => $validated['address'],
                 'age' => $validated['age'],
-                'profile_picture' => $validated['profile_picture'] ?? $user->profile_picture,
+                'profile_picture' => $profilePicturePath,
                 'has_education' => ($request->input('has_education') === 'yes'),
                 'has_experience' => ($request->input('has_experience') === 'yes'),
                 'has_achievements' => ($request->input('has_achievements') === 'yes'),
@@ -213,9 +215,12 @@ class ResumeController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
+            Log::error('Resume update failed: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'Failed to save: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to save resume. Please try again. Error: ' . $e->getMessage()]);
         }
     }
 

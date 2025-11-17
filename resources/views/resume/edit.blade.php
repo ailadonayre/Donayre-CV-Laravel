@@ -25,6 +25,14 @@
     @csrf
 </form>
 
+<!-- Floating Save Button -->
+<div class="floating-save-container" id="floatingSaveBtn">
+    <button type="submit" form="resumeForm" class="floating-save-btn">
+        <i class="fa-solid fa-save"></i>
+        <span>Save Changes</span>
+    </button>
+</div>
+
 <main class="main-content">
     <div class="container">
         <div class="resume-editor">
@@ -42,9 +50,45 @@
             <form method="POST" action="{{ route('resume.update') }}" class="resume-form" id="resumeForm" enctype="multipart/form-data">
                 @csrf
                 
-                <!-- Personal Information -->
+                <!-- Personal Information with Profile Picture and CV Upload -->
                 <div class="form-section">
                     <h3 class="section-title"><i class="fa-solid fa-user"></i> Personal Information</h3>
+                    
+                    <!-- Profile Picture Section - Centered -->
+                    <div class="profile-picture-section">
+                        @if($user->profile_picture_url)
+                            <img src="{{ $user->profile_picture_url }}" alt="Current profile picture" class="preview-image-circle" id="currentProfilePic">
+                        @else
+                            <div class="profile-image-placeholder" id="profilePlaceholder">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                        @endif
+                        
+                        @if($user->profile_picture_url)
+                            <button type="button" class="btn-remove-file-centered" onclick="confirmDeleteProfilePic()">
+                                <i class="fa-solid fa-trash"></i> Remove Picture
+                            </button>
+                        @endif
+                        
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label class="form-label" style="text-align: center;">Upload New Profile Picture</label>
+                            <input 
+                                type="file" 
+                                name="profile_picture" 
+                                class="form-input-file" 
+                                accept="image/jpeg,image/jpg,image/png"
+                                onchange="previewImage(this)"
+                                id="profilePictureInput"
+                            >
+                            <small class="form-note" style="text-align: center; display: block;">Accepted formats: JPG, JPEG, PNG. Max size: 2MB</small>
+                        </div>
+                        
+                        <div id="image-preview" class="image-preview-container" style="display: none;">
+                            <img id="preview-img" class="preview-image-circle" alt="Preview">
+                        </div>
+                    </div>
+                    
+                    <!-- Personal Details -->
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Full Name *</label>
@@ -122,81 +166,45 @@
                             >
                         </div>
                     </div>
-                </div>
-
-                <!-- Profile Picture Section -->
-                <div class="form-section">
-                    <h3 class="section-title"><i class="fa-solid fa-image"></i> Profile Picture</h3>
                     
-                    @if($user->profile_picture_url)
-                        <div class="current-profile-picture">
-                            <img src="{{ $user->profile_picture_url }}" alt="Current profile picture" class="preview-image-circle">
-                            <form method="POST" action="{{ route('profile.picture.delete') }}" style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn-remove-file" onclick="return confirm('Are you sure you want to delete your profile picture?')">
-                                    <i class="fa-solid fa-trash"></i> Remove Picture
-                                </button>
-                            </form>
-                        </div>
-                    @endif
-                    
-                    <div class="form-group">
-                        <label class="form-label">Upload Profile Picture</label>
-                        <input 
-                            type="file" 
-                            name="profile_picture" 
-                            class="form-input-file" 
-                            accept="image/jpeg,image/jpg,image/png"
-                            onchange="previewImage(this)"
-                        >
-                        <small class="form-note">Accepted formats: JPG, JPEG, PNG. Max size: 2MB</small>
-                        <div id="image-preview" class="image-preview-container" style="display: none;">
-                            <img id="preview-img" class="preview-image-circle" alt="Preview">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CV PDF Section -->
-                <div class="form-section">
-                    <h3 class="section-title"><i class="fa-solid fa-file-pdf"></i> CV PDF Upload</h3>
-                    
-                    @if($user->cvPdf && $user->cvPdf->exists())
-                        <div class="current-cv-pdf">
-                            <div class="pdf-display">
-                                <i class="fa-solid fa-file-pdf" style="font-size: 2rem; color: var(--accent-color);"></i>
-                                <span>{{ $user->cvPdf->original_name }}</span>
-                                <a href="{{ $user->cvPdf->url }}" download class="btn-download-mini">
-                                    <i class="fa-solid fa-download"></i> Download
-                                </a>
+                    <!-- CV PDF Upload Section -->
+                    <div class="cv-upload-section">
+                        <h4 class="cv-section-title"><i class="fa-solid fa-file-pdf"></i> CV PDF Upload (Optional)</h4>
+                        
+                        @if($user->cvPdf && $user->cvPdf->exists())
+                            <div class="current-cv-display">
+                                <div class="pdf-info">
+                                    <i class="fa-solid fa-file-pdf" style="font-size: 1.5rem; color: var(--accent-color);"></i>
+                                    <span class="pdf-name">{{ $user->cvPdf->original_name }}</span>
+                                </div>
+                                <div class="pdf-actions">
+                                    <a href="{{ $user->cvPdf->url }}" download class="btn-download-mini">
+                                        <i class="fa-solid fa-download"></i> Download
+                                    </a>
+                                    <button type="button" class="btn-remove-mini" onclick="confirmDeleteCvPdf()">
+                                        <i class="fa-solid fa-trash"></i> Remove
+                                    </button>
+                                </div>
                             </div>
-                            <form method="POST" action="{{ route('cv.pdf.delete') }}" style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn-remove-file" onclick="return confirm('Are you sure you want to delete your CV PDF?')">
-                                    <i class="fa-solid fa-trash"></i> Remove PDF
-                                </button>
-                            </form>
+                        @endif
+                        
+                        <div class="form-group">
+                            <input 
+                                type="file" 
+                                name="cv_pdf" 
+                                class="form-input-file" 
+                                accept=".pdf,application/pdf"
+                                onchange="validatePdfFile(this)"
+                                id="cv_pdf_input"
+                            >
+                            <small class="form-note">
+                                <i class="fa-solid fa-info-circle"></i> Upload your CV in PDF format. Max size: 5MB
+                            </small>
+                            @error('cv_pdf')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                            <div id="pdf-error" class="error-message" style="display: none;"></div>
                         </div>
-                    @endif
-                    
-                    <div class="form-group">
-                        <label class="form-label">Upload CV PDF (Optional)</label>
-                        <input 
-                            type="file" 
-                            name="cv_pdf" 
-                            class="form-input-file" 
-                            accept=".pdf,application/pdf"
-                            onchange="validatePdfFile(this)"
-                            id="cv_pdf_input"
-                        >
-                        <small class="form-note">
-                            <i class="fa-solid fa-info-circle"></i> Upload your CV in PDF format. Optional. Max size: 5MB
-                        </small>
-                        @error('cv_pdf')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div id="pdf-error" class="error-message" style="display: none;"></div>
                     </div>
                 </div>
 
@@ -238,12 +246,6 @@
                             placeholder="https://yourwebsite.com"
                         >
                     </div>
-                </div>
-
-                <!-- Form Actions -->
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary"><i class="fa-solid fa-save"></i> Update Resume</button>
-                    <a href="{{ route('home') }}" class="btn-secondary"><i class="fa-solid fa-arrow-left"></i> Cancel</a>
                 </div>
 
                 <!-- Education Section -->
@@ -572,7 +574,7 @@
                                     <div class="tech-checkbox-item">
                                         <input 
                                             type="checkbox" 
-                                            id="{{ $inputId }}" 
+                                            id="{{ $inputId }}"
                                             name="{{ $fieldName }}[]" 
                                             value="{{ $option->name }}"
                                             {{ $isChecked ? 'checked' : '' }}
@@ -598,12 +600,6 @@
                         </div>
                     @endforeach
                 </div>
-
-                <!-- Form Actions -->
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary"><i class="fa-solid fa-save"></i> Save Resume</button>
-                    <a href="{{ route('home') }}" class="btn-secondary"><i class="fa-solid fa-arrow-left"></i> Cancel</a>
-                </div>
             </form>
         </div>
     </div>
@@ -611,61 +607,184 @@
 
 @push('styles')
 <style>
-    /* Profile Picture + PDF Section */
-    .current-profile-picture, .current-cv-pdf {
-        margin-bottom: 20px;
-        padding: 15px;
-        background: var(--bg-secondary);
-        border-radius: 8px;
-        border: 1px solid var(--border-color);
+    /* Floating Save Button */
+    .floating-save-container {
+        position: fixed;
+        top: 20px;
+        right: 100px;
+        z-index: 999;
+        animation: slideInRight 0.5s ease;
     }
-
-    .preview-image-circle {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid var(--accent-color);
-        margin-bottom: 10px;
-    }
-
-    .pdf-display {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 10px;
-    }
-
-    .btn-download-mini {
+    
+    .floating-save-btn {
         background: var(--accent-color);
         color: white;
-        padding: 6px 12px;
-        border-radius: 6px;
-        text-decoration: none;
-        font-size: 0.85rem;
-        font-weight: 600;
-        transition: all 0.3s;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 50px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 20px rgba(93, 184, 177, 0.4);
+        transition: all 0.3s ease;
     }
-
-    .btn-download-mini:hover {
+    
+    .floating-save-btn:hover {
         background: var(--accent-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(93, 184, 177, 0.5);
     }
-
-    .btn-remove-file {
+    
+    .floating-save-btn:active {
+        transform: translateY(0);
+    }
+    
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    /* Profile Picture Section - Centered */
+    .profile-picture-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 30px 20px;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        margin-bottom: 30px;
+        border: 2px dashed var(--border-color);
+    }
+    
+    .preview-image-circle {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--accent-color);
+        margin-bottom: 15px;
+        box-shadow: 0 4px 15px var(--shadow-medium);
+    }
+    
+    .profile-image-placeholder {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: var(--bg-secondary);
+        border: 4px dashed var(--accent-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: var(--text-muted);
+        margin-bottom: 15px;
+    }
+    
+    .btn-remove-file-centered {
         background: #e74c3c;
         color: white;
         border: none;
-        padding: 8px 16px;
-        border-radius: 6px;
+        padding: 10px 20px;
+        border-radius: 8px;
         cursor: pointer;
         font-weight: 600;
         transition: all 0.3s;
+        margin-bottom: 10px;
     }
-
-    .btn-remove-file:hover {
+    
+    .btn-remove-file-centered:hover {
         background: #c0392b;
+        transform: translateY(-2px);
     }
-
+    
+    /* CV Upload Section */
+    .cv-upload-section {
+        margin-top: 30px;
+        padding-top: 30px;
+        border-top: 2px solid var(--border-color);
+    }
+    
+    .cv-section-title {
+        color: var(--accent-color);
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .current-cv-display {
+        background: var(--bg-secondary);
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .pdf-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .pdf-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        flex: 1;
+    }
+    
+    .pdf-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-download-mini,
+    .btn-remove-mini {
+        padding: 8px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: all 0.3s;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-download-mini {
+        background: var(--accent-color);
+        color: white;
+    }
+    
+    .btn-download-mini:hover {
+        background: var(--accent-hover);
+        transform: translateY(-2px);
+    }
+    
+    .btn-remove-mini {
+        background: #e74c3c;
+        color: white;
+    }
+    
+    .btn-remove-mini:hover {
+        background: #c0392b;
+        transform: translateY(-2px);
+    }
+    
     .form-input-file {
         width: 100%;
         padding: 12px;
@@ -675,23 +794,24 @@
         cursor: pointer;
         transition: all 0.3s;
     }
-
+    
     .form-input-file:hover {
         border-color: var(--accent-color);
+        background: var(--bg-primary);
     }
-
+    
     .image-preview-container {
         margin-top: 15px;
         text-align: center;
     }
-
+    
     .error-message {
         color: #e74c3c;
         font-size: 0.9rem;
         margin-top: 5px;
         font-weight: 600;
     }
-
+    
     /* Repeater Items */
     .repeater-item {
         background: var(--bg-secondary);
@@ -700,7 +820,7 @@
         margin-bottom: 15px;
         border: 1px solid var(--border-color);
     }
-
+    
     .btn-remove {
         background: #5db8b1;
         color: white;
@@ -711,11 +831,11 @@
         font-weight: 600;
         transition: all 0.3s;
     }
-
+    
     .btn-remove:hover {
         background: #4d9b94;
     }
-
+    
     .btn-add {
         background: var(--accent-color);
         color: white;
@@ -727,11 +847,11 @@
         margin-top: 10px;
         transition: all 0.3s;
     }
-
+    
     .btn-add:hover {
         background: var(--accent-hover);
     }
-
+    
     /* Trait Selector */
     .trait-selector {
         display: flex;
@@ -739,7 +859,7 @@
         gap: 10px;
         margin-top: 10px;
     }
-
+    
     .trait-option {
         padding: 8px 16px;
         border: 2px solid var(--border-color);
@@ -751,28 +871,28 @@
         gap: 8px;
         background: var(--bg-primary);
     }
-
+    
     .trait-option:hover {
         border-color: var(--accent-color);
         background: var(--bg-secondary);
         transform: translateY(-2px);
     }
-
+    
     .trait-option.selected {
         background: var(--accent-color);
         color: white;
         border-color: var(--accent-color);
     }
-
+    
     .trait-option.selected i {
         color: white;
     }
-
+    
     .trait-option i {
         color: var(--accent-color);
         transition: color 0.3s;
     }
-
+    
     /* Icon Selector */
     .icon-selector {
         display: flex;
@@ -780,7 +900,7 @@
         gap: 10px;
         margin-top: 10px;
     }
-
+    
     .icon-option {
         width: 50px;
         height: 50px;
@@ -794,18 +914,18 @@
         transition: all 0.3s;
         background: var(--bg-primary);
     }
-
+    
     .icon-option:hover {
         border-color: var(--accent-color);
         transform: scale(1.1);
     }
-
+    
     .icon-option.selected {
         background: var(--accent-color);
         color: white;
         border-color: var(--accent-color);
     }
-
+    
     .form-note {
         display: block;
         margin-top: 5px;
@@ -813,7 +933,7 @@
         color: var(--text-muted);
         font-style: italic;
     }
-
+    
     .section-toggle {
         margin-bottom: 20px;
         padding: 15px;
@@ -821,13 +941,13 @@
         border-radius: 8px;
         border: 2px solid var(--border-color);
     }
-
+    
     .section-toggle label {
         font-weight: 700;
         color: var(--text-primary);
         margin-right: 10px;
     }
-
+    
     .section-toggle select {
         padding: 8px 12px;
         border-radius: 6px;
@@ -837,15 +957,15 @@
         font-weight: 600;
         cursor: pointer;
     }
-
+    
     .section-content {
         display: none;
     }
-
+    
     .section-content.active {
         display: block;
     }
-
+    
     .no-data-message {
         padding: 15px;
         background: rgba(239, 35, 60, 0.1);
@@ -855,7 +975,7 @@
         font-weight: 600;
         text-align: center;
     }
-
+    
     /* Tech Category */
     .tech-category-section {
         margin-bottom: 25px;
@@ -864,20 +984,20 @@
         border-radius: 12px;
         border: 1px solid var(--border-color);
     }
-
+    
     .tech-category-title {
         font-weight: 700;
         color: var(--accent-color);
         margin-bottom: 15px;
         font-size: 1.1rem;
     }
-
+    
     .tech-checkboxes {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 10px;
     }
-
+    
     .tech-checkbox-item {
         display: flex;
         align-items: center;
@@ -888,34 +1008,34 @@
         border: 1px solid var(--border-color);
         transition: all 0.3s;
     }
-
+    
     .tech-checkbox-item:hover {
         background: var(--bg-secondary);
         border-color: var(--accent-color);
     }
-
+    
     .tech-checkbox-item input[type="checkbox"] {
         width: 18px;
         height: 18px;
         cursor: pointer;
     }
-
+    
     .tech-checkbox-item label {
         cursor: pointer;
         font-weight: 500;
         color: var(--text-primary);
         flex: 1;
     }
-
+    
     .custom-tech-input {
         margin-top: 10px;
         display: none;
     }
-
+    
     .custom-tech-input.active {
         display: block;
     }
-
+    
     .custom-tech-input input {
         width: 100%;
         padding: 10px;
@@ -923,6 +1043,41 @@
         border: 2px solid var(--border-color);
         background: var(--bg-primary);
         color: var(--text-primary);
+    }
+    
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .floating-save-container {
+            right: 20px;
+            top: 80px;
+        }
+        
+        .floating-save-btn span {
+            display: none;
+        }
+        
+        .floating-save-btn {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .profile-picture-section {
+            padding: 20px 15px;
+        }
+        
+        .pdf-actions {
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .btn-download-mini,
+        .btn-remove-mini {
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>
 @endpush
@@ -1093,6 +1248,8 @@
     function previewImage(input) {
         const preview = document.getElementById('image-preview');
         const img = document.getElementById('preview-img');
+        const currentPic = document.getElementById('currentProfilePic');
+        const placeholder = document.getElementById('profilePlaceholder');
         
         if (input.files && input.files[0]) {
             const file = input.files[0];
@@ -1117,6 +1274,10 @@
             reader.onload = function(e) {
                 img.src = e.target.result;
                 preview.style.display = 'block';
+                
+                // Hide current picture or placeholder
+                if (currentPic) currentPic.style.display = 'none';
+                if (placeholder) placeholder.style.display = 'none';
             }
             reader.readAsDataURL(file);
         }
@@ -1148,6 +1309,40 @@
         return true;
     }
     
+    function confirmDeleteProfilePic() {
+        if (confirm('Are you sure you want to delete your profile picture?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ route("profile.picture.delete") }}';
+            
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            
+            form.appendChild(csrfInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    function confirmDeleteCvPdf() {
+        if (confirm('Are you sure you want to delete your CV PDF?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ route("cv.pdf.delete") }}';
+            
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            
+            form.appendChild(csrfInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         updateGlobalTraitInputs();
@@ -1162,6 +1357,23 @@
                     customInput.classList.add('active');
                 }
             }
+        });
+        
+        // Show/hide floating save button on scroll
+        let lastScrollTop = 0;
+        const floatingBtn = document.getElementById('floatingSaveBtn');
+        
+        window.addEventListener('scroll', function() {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (scrollTop > 200) {
+                floatingBtn.style.opacity = '1';
+                floatingBtn.style.pointerEvents = 'auto';
+            } else {
+                floatingBtn.style.opacity = '0.7';
+            }
+            
+            lastScrollTop = scrollTop;
         });
     });
 </script>

@@ -395,12 +395,6 @@ label, legend, fieldset {
     font-weight: 400;
 }
 
-.profile-social {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-}
-
 .social-icon {
     display: flex;
     align-items: center;
@@ -463,6 +457,67 @@ label, legend, fieldset {
     background: var(--accent-hover);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(93, 184, 177, 0.2);
+}
+
+/* Profile Actions Inline - Social Links + CV Download */
+.profile-actions-inline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.profile-social {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-download-pdf-inline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    background: var(--accent-color);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0 16px;
+    min-width: auto;
+    white-space: nowrap;
+}
+
+.btn-download-pdf-inline:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(93, 184, 177, 0.3);
+}
+
+.btn-download-pdf-inline span {
+    white-space: nowrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .profile-actions-inline {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .profile-social {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .btn-download-pdf-inline {
+        width: auto;
+        padding: 10px 20px;
+    }
 }
 
 .tech-card {

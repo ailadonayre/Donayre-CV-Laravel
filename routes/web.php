@@ -23,8 +23,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/edit-resume', [ResumeController::class, 'update'])->name('resume.update');
     
     // Delete routes for profile picture and CV PDF
-    Route::delete('/profile-picture', [ResumeController::class, 'deleteProfilePicture'])->name('profile.picture.delete');
-    Route::delete('/cv-pdf', [ResumeController::class, 'deleteCvPdf'])->name('cv.pdf.delete');
+    Route::post('/profile-picture/delete', [ResumeController::class, 'deleteProfilePicture'])->name('profile.picture.delete');
+    Route::post('/cv-pdf/delete', [ResumeController::class, 'deleteCvPdf'])->name('cv.pdf.delete');
     
     Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');
 });

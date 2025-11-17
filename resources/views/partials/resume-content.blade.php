@@ -53,22 +53,25 @@
                         @endif
                     </div>
                     
-                    @if($user->socialLinks->count() > 0)
-                        <div class="profile-social">
-                            @foreach($user->socialLinks as $link)
-                                <a href="{{ $link->url }}" target="_blank" class="social-icon" rel="noopener noreferrer" title="{{ $link->platform }}">
-                                    <i class="{{ $link->icon }}"></i>
-                                </a>
-                            @endforeach
-                        </div>
-                    @endif
+                    <!-- Social Links and CV Download Button Inline -->
+                    <div class="profile-actions-inline">
+                        @if($user->socialLinks->count() > 0)
+                            <div class="profile-social">
+                                @foreach($user->socialLinks as $link)
+                                    <a href="{{ $link->url }}" target="_blank" class="social-icon" rel="noopener noreferrer" title="{{ $link->platform }}">
+                                        <i class="{{ $link->icon }}"></i>
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
 
-                    @if($user->cvPdf && $user->cvPdf->exists())
-                        <a href="{{ $user->cvPdf->url }}" download class="btn-download-pdf" title="Download CV PDF">
-                            <i class="fa-solid fa-file-pdf"></i>
-                            <span>Download CV</span>
-                        </a>
-                    @endif
+                        @if($user->cvPdf && $user->cvPdf->exists())
+                            <a href="{{ $user->cvPdf->url }}" download class="btn-download-pdf-inline" title="Download CV PDF">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <span>CV</span>
+                            </a>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
