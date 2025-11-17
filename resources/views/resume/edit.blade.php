@@ -124,6 +124,43 @@
                     </div>
                 </div>
 
+                <!-- Profile Picture Section -->
+                <div class="form-section">
+                    <h3 class="section-title"><i class="fa-solid fa-image"></i> Profile Picture</h3>
+                    
+                    @if($user->profile_picture_url)
+                        <div class="current-profile-picture">
+                            <img src="{{ $user->profile_picture_url }}" alt="Current profile picture" class="preview-image-circle">
+                            <form method="POST" action="{{ route('profile.picture.delete') }}" style="display: inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-remove-file" onclick="return confirm('Are you sure you want to delete your profile picture?')">
+                                    <i class="fa-solid fa-trash"></i> Remove Picture
+                                </button>
+                            </form>
+                        </div>
+                    @endif
+                    
+                    <div class="form-group">
+                        <label class="form-label">Upload Profile Picture</label>
+                        <input 
+                            type="file" 
+                            name="profile_picture" 
+                            class="form-input-file" 
+                            accept="image/jpeg,image/jpg,image/png"
+                            onchange="previewImage(this)"
+                        >
+                        <small class="form-note">Accepted formats: JPG, JPEG, PNG. Max size: 2MB</small>
+                        <div id="image-preview" class="image-preview-container" style="display: none;">
+                            <img id="preview-img" class="preview-image-circle" alt="Preview">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CV PDF Section -->
+                <div class="form-section">
+                    <h3 class="section-title"></h3>
+
                 <!-- Social Links -->
                 <div class="form-section">
                     <h3 class="section-title"><i class="fa-solid fa-link"></i> Social Links</h3>

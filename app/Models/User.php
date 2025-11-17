@@ -22,6 +22,7 @@ class User extends Authenticatable
         'age',
         'profile_summary',
         'public_slug',
+        'profile_picture',
         'has_education',
         'has_experience',
         'has_achievements',
@@ -42,7 +43,7 @@ class User extends Authenticatable
         'age' => 'integer',
     ];
 
-    // Relationships
+    // Relationships - Updated with descending order
     public function socialLinks()
     {
         return $this->hasMany(SocialLink::class)->orderBy('display_order');
@@ -50,12 +51,12 @@ class User extends Authenticatable
 
     public function education()
     {
-        return $this->hasMany(Education::class)->orderBy('display_order');
+        return $this->hasMany(Education::class)->orderBy('created_at', 'desc');
     }
 
     public function experience()
     {
-        return $this->hasMany(Experience::class)->orderBy('display_order');
+        return $this->hasMany(Experience::class)->orderBy('created_at', 'desc');
     }
 
     public function experienceTraitsGlobal()
@@ -65,7 +66,7 @@ class User extends Authenticatable
 
     public function achievements()
     {
-        return $this->hasMany(Achievement::class)->orderBy('display_order');
+        return $this->hasMany(Achievement::class)->orderBy('created_at', 'desc');
     }
 
     public function techCategories()
@@ -78,6 +79,17 @@ class User extends Authenticatable
         return $this->hasMany(UserTechnology::class)
             ->orderBy('category', 'asc')
             ->orderBy('display_order', 'asc');
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class);
+    }
+
+    // Get CV PDF attachment
+    public function cvPdf()
+    {
+        return $this->hasOne(Attachment::class)->where('file_type', 'cv_pdf')->latest();
     }
 
     // Auto-generate public_slug on creation
@@ -114,5 +126,14 @@ class User extends Authenticatable
                $this->experience()->exists() || 
                $this->achievements()->exists() || 
                $this->userTechnologies()->exists();
+    }
+
+    // Get profile picture URL or default
+    public function getProfilePictureUrlAttribute()
+    {
+        if ($this->profile_picture && \Storage::disk('public')->exists($this->profile_picture)) {
+            return asset('storage/' . $this->profile_picture);
+        }
+        return null;
     }
 }

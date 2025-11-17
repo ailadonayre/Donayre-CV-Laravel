@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Experience;
 use App\Models\TechnologyOption;
+use App\Models\Attachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ResumeController extends Controller
 {
@@ -19,14 +21,15 @@ class ResumeController extends Controller
         /** @var User $user */
         $user = Auth::user();
         
-        // Load all relationships
+        // Load all relationships with newest first
         $user->load([
             'socialLinks',
             'education',
             'experience.keywords',
             'experienceTraitsGlobal',
             'achievements',
-            'userTechnologies'
+            'userTechnologies',
+            'cvPdf'
         ]);
 
         // Group technologies by category
@@ -52,7 +55,8 @@ class ResumeController extends Controller
             'experience.keywords',
             'experienceTraitsGlobal',
             'achievements',
-            'userTechnologies'
+            'userTechnologies',
+            'cvPdf'
         ]);
 
         // Get technology options grouped by category
@@ -72,7 +76,7 @@ class ResumeController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        // Validate basic personal information
+        // Validate basic personal information with character limits
         $validated = $request->validate([
             'fullname' => 'required|string|max:100',
             'title' => 'nullable|string|max:100',
@@ -80,6 +84,12 @@ class ResumeController extends Controller
             'contact' => 'nullable|string|max:50',
             'address' => 'required|string|max:255',
             'age' => 'required|integer|min:0|max:150',
+            
+            // Profile picture
+            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            
+            // CV PDF
+            'cv_pdf' => 'nullable|file|mimes:pdf|max:10240',
             
             // Social links
             'linkedin' => 'nullable|url|max:255',
@@ -128,6 +138,19 @@ class ResumeController extends Controller
         DB::beginTransaction();
 
         try {
+            // Handle profile picture upload
+            if ($request->hasFile('profile_picture')) {
+                // Delete old profile picture if exists
+                if ($user->profile_picture) {
+                    Storage::disk('public')->delete($user->profile_picture);
+                }
+                
+                $file = $request->file('profile_picture');
+                $filename = 'profile_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('profile_pictures', $filename, 'public');
+                $validated['profile_picture'] = $path;
+            }
+
             // Update basic user information
             $user->update([
                 'fullname' => $validated['fullname'],
@@ -136,10 +159,33 @@ class ResumeController extends Controller
                 'contact' => $validated['contact'],
                 'address' => $validated['address'],
                 'age' => $validated['age'],
+                'profile_picture' => $validated['profile_picture'] ?? $user->profile_picture,
                 'has_education' => ($request->input('has_education') === 'yes'),
                 'has_experience' => ($request->input('has_experience') === 'yes'),
                 'has_achievements' => ($request->input('has_achievements') === 'yes'),
             ]);
+
+            // Handle CV PDF upload
+            if ($request->hasFile('cv_pdf')) {
+                // Delete old CV PDF if exists
+                $oldPdf = $user->cvPdf;
+                if ($oldPdf) {
+                    Storage::disk('public')->delete($oldPdf->file_path);
+                    $oldPdf->delete();
+                }
+                
+                $file = $request->file('cv_pdf');
+                $filename = 'cv_' . $user->id . '_' . time() . '.pdf';
+                $path = $file->storeAs('attachments', $filename, 'public');
+                
+                Attachment::create([
+                    'user_id' => $user->id,
+                    'file_path' => $path,
+                    'file_type' => 'cv_pdf',
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_size' => $file->getSize(),
+                ]);
+            }
 
             // Update social links
             $this->updateSocialLinks($user, $request);
@@ -171,6 +217,39 @@ class ResumeController extends Controller
                 ->withInput()
                 ->withErrors(['error' => 'Failed to save: ' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * Delete profile picture
+     */
+    public function deleteProfilePicture()
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        
+        if ($user->profile_picture) {
+            Storage::disk('public')->delete($user->profile_picture);
+            $user->update(['profile_picture' => null]);
+        }
+        
+        return back()->with('success', 'Profile picture deleted successfully!');
+    }
+
+    /**
+     * Delete CV PDF
+     */
+    public function deleteCvPdf()
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        
+        $pdf = $user->cvPdf;
+        if ($pdf) {
+            Storage::disk('public')->delete($pdf->file_path);
+            $pdf->delete();
+        }
+        
+        return back()->with('success', 'CV PDF deleted successfully!');
     }
 
     /**

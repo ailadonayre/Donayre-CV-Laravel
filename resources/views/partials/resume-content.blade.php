@@ -8,6 +8,14 @@
             </div>
             <div class="profile-section">
                 <div class="profile-info">
+                    @if($user->profile_picture_url)
+                        <img src="{{ $user->profile_picture_url }}" alt="{{ $user->fullname }}" class="profile-image">
+                    @else
+                        <div class="profile-image-placeholder">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                    @endif
+                    
                     <h3 class="profile-name-title">
                         <span class="name-highlight">{{ strtoupper($user->fullname ?? 'User') }}</span>
                     </h3>
@@ -53,6 +61,13 @@
                                 </a>
                             @endforeach
                         </div>
+                    @endif
+
+                    @if($user->cvPdf && $user->cvPdf->exists())
+                        <a href="{{ $user->cvPdf->url }}" download class="btn-download-pdf" title="Download CV PDF">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span>Download CV</span>
+                        </a>
                     @endif
                 </div>
             </div>
