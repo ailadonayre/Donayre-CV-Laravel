@@ -245,157 +245,6 @@
                     <button type="submit" class="btn-primary"><i class="fa-solid fa-save"></i> Update Resume</button>
                     <a href="{{ route('home') }}" class="btn-secondary"><i class="fa-solid fa-arrow-left"></i> Cancel</a>
                 </div>
-            </form>
-        </div>
-    </div>
-</main>
-
-@push('styles')
-<style>
-    .current-profile-picture, .current-cv-pdf {
-        margin-bottom: 20px;
-        padding: 15px;
-        background: var(--bg-secondary);
-        border-radius: 8px;
-        border: 1px solid var(--border-color);
-    }
-    
-    .preview-image-circle {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid var(--accent-color);
-        margin-bottom: 10px;
-    }
-    
-    .pdf-display {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 10px;
-    }
-    
-    .btn-download-mini {
-        background: var(--accent-color);
-        color: white;
-        padding: 6px 12px;
-        border-radius: 6px;
-        text-decoration: none;
-        font-size: 0.85rem;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-    
-    .btn-download-mini:hover {
-        background: var(--accent-hover);
-    }
-    
-    .btn-remove-file {
-        background: #e74c3c;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-    
-    .btn-remove-file:hover {
-        background: #c0392b;
-    }
-    
-    .form-input-file {
-        width: 100%;
-        padding: 12px;
-        border: 2px dashed var(--border-color);
-        border-radius: 8px;
-        background: var(--bg-secondary);
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-    
-    .form-input-file:hover {
-        border-color: var(--accent-color);
-    }
-    
-    .image-preview-container {
-        margin-top: 15px;
-        text-align: center;
-    }
-    
-    .error-message {
-        color: #e74c3c;
-        font-size: 0.9rem;
-        margin-top: 5px;
-        font-weight: 600;
-    }
-</style>
-@endpush
-
-@push('scripts')
-<script>
-    function previewImage(input) {
-        const preview = document.getElementById('image-preview');
-        const img = document.getElementById('preview-img');
-        
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-            
-            // Validate file type
-            if (!file.type.match('image/(jpeg|jpg|png)')) {
-                alert('Please select a valid image file (JPG, JPEG, or PNG)');
-                input.value = '';
-                preview.style.display = 'none';
-                return;
-            }
-            
-            // Validate file size (2MB)
-            if (file.size > 2048 * 1024) {
-                alert('Image size must be less than 2MB');
-                input.value = '';
-                preview.style.display = 'none';
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                img.src = e.target.result;
-                preview.style.display = 'block';
-            }
-            reader.readAsDataURL(file);
-        }
-    }
-    
-    function validatePdfFile(input) {
-        const errorDiv = document.getElementById('pdf-error');
-        errorDiv.style.display = 'none';
-        
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-            
-            // Validate file type
-            if (file.type !== 'application/pdf') {
-                errorDiv.textContent = 'Please select a valid PDF file';
-                errorDiv.style.display = 'block';
-                input.value = '';
-                return false;
-            }
-            
-            // Validate file size (5MB)
-            if (file.size > 5120 * 1024) {
-                errorDiv.textContent = 'PDF size must be less than 5MB';
-                errorDiv.style.display = 'block';
-                input.value = '';
-                return false;
-            }
-        }
-        return true;
-    }
-</script>
-@endpush
-@endsection
 
                 <!-- Education Section -->
                 <div class="form-section">
@@ -762,39 +611,319 @@
 
 @push('styles')
 <style>
-    .repeater-item { background: var(--bg-secondary); padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); }
-    .btn-remove { background: #5db8b1; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
-    .btn-remove:hover { background: #4d9b94; }
-    .btn-add { background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 10px; transition: all 0.3s; }
-    .btn-add:hover { background: var(--accent-hover); }
-    .trait-selector { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-    .trait-option { padding: 8px 16px; border: 2px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; background: var(--bg-primary); }
-    .trait-option:hover { border-color: var(--accent-color); background: var(--bg-secondary); transform: translateY(-2px); }
-    .trait-option.selected { background: var(--accent-color); color: white; border-color: var(--accent-color); }
-    .trait-option.selected i { color: white; }
-    .trait-option i { color: var(--accent-color); transition: color 0.3s; }
-    .icon-selector { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-    .icon-option { width: 50px; height: 50px; border: 2px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.5rem; transition: all 0.3s; background: var(--bg-primary); }
-    .icon-option:hover { border-color: var(--accent-color); transform: scale(1.1); }
-    .icon-option.selected { background: var(--accent-color); color: white; border-color: var(--accent-color); }
-    .form-note { display: block; margin-top: 5px; font-size: 0.85rem; color: var(--text-muted); font-style: italic; }
-    .section-toggle { margin-bottom: 20px; padding: 15px; background: var(--bg-secondary); border-radius: 8px; border: 2px solid var(--border-color); }
-    .section-toggle label { font-weight: 700; color: var(--text-primary); margin-right: 10px; }
-    .section-toggle select { padding: 8px 12px; border-radius: 6px; border: 2px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-weight: 600; cursor: pointer; }
-    .section-content { display: none; }
-    .section-content.active { display: block; }
-    .no-data-message { padding: 15px; background: rgba(239, 35, 60, 0.1); border: 2px solid rgba(239, 35, 60, 0.3); border-radius: 8px; color: var(--text-primary); font-weight: 600; text-align: center; }
-    
-    .tech-category-section { margin-bottom: 25px; padding: 20px; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-color); }
-    .tech-category-title { font-weight: 700; color: var(--accent-color); margin-bottom: 15px; font-size: 1.1rem; }
-    .tech-checkboxes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-    .tech-checkbox-item { display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-primary); border-radius: 6px; border: 1px solid var(--border-color); transition: all 0.3s; }
-    .tech-checkbox-item:hover { background: var(--bg-secondary); border-color: var(--accent-color); }
-    .tech-checkbox-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
-    .tech-checkbox-item label { cursor: pointer; font-weight: 500; color: var(--text-primary); flex: 1; }
-    .custom-tech-input { margin-top: 10px; display: none; }
-    .custom-tech-input.active { display: block; }
-    .custom-tech-input input { width: 100%; padding: 10px; border-radius: 6px; border: 2px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); }
+    /* Profile Picture + PDF Section */
+    .current-profile-picture, .current-cv-pdf {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+
+    .preview-image-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--accent-color);
+        margin-bottom: 10px;
+    }
+
+    .pdf-display {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 10px;
+    }
+
+    .btn-download-mini {
+        background: var(--accent-color);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-download-mini:hover {
+        background: var(--accent-hover);
+    }
+
+    .btn-remove-file {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-remove-file:hover {
+        background: #c0392b;
+    }
+
+    .form-input-file {
+        width: 100%;
+        padding: 12px;
+        border: 2px dashed var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-secondary);
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .form-input-file:hover {
+        border-color: var(--accent-color);
+    }
+
+    .image-preview-container {
+        margin-top: 15px;
+        text-align: center;
+    }
+
+    .error-message {
+        color: #e74c3c;
+        font-size: 0.9rem;
+        margin-top: 5px;
+        font-weight: 600;
+    }
+
+    /* Repeater Items */
+    .repeater-item {
+        background: var(--bg-secondary);
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-remove {
+        background: #5db8b1;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-remove:hover {
+        background: #4d9b94;
+    }
+
+    .btn-add {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-top: 10px;
+        transition: all 0.3s;
+    }
+
+    .btn-add:hover {
+        background: var(--accent-hover);
+    }
+
+    /* Trait Selector */
+    .trait-selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .trait-option {
+        padding: 8px 16px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg-primary);
+    }
+
+    .trait-option:hover {
+        border-color: var(--accent-color);
+        background: var(--bg-secondary);
+        transform: translateY(-2px);
+    }
+
+    .trait-option.selected {
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+
+    .trait-option.selected i {
+        color: white;
+    }
+
+    .trait-option i {
+        color: var(--accent-color);
+        transition: color 0.3s;
+    }
+
+    /* Icon Selector */
+    .icon-selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .icon-option {
+        width: 50px;
+        height: 50px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.5rem;
+        transition: all 0.3s;
+        background: var(--bg-primary);
+    }
+
+    .icon-option:hover {
+        border-color: var(--accent-color);
+        transform: scale(1.1);
+    }
+
+    .icon-option.selected {
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+
+    .form-note {
+        display: block;
+        margin-top: 5px;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        font-style: italic;
+    }
+
+    .section-toggle {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        border: 2px solid var(--border-color);
+    }
+
+    .section-toggle label {
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-right: 10px;
+    }
+
+    .section-toggle select {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 2px solid var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .section-content {
+        display: none;
+    }
+
+    .section-content.active {
+        display: block;
+    }
+
+    .no-data-message {
+        padding: 15px;
+        background: rgba(239, 35, 60, 0.1);
+        border: 2px solid rgba(239, 35, 60, 0.3);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-weight: 600;
+        text-align: center;
+    }
+
+    /* Tech Category */
+    .tech-category-section {
+        margin-bottom: 25px;
+        padding: 20px;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+    }
+
+    .tech-category-title {
+        font-weight: 700;
+        color: var(--accent-color);
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+    }
+
+    .tech-checkboxes {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+    }
+
+    .tech-checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        background: var(--bg-primary);
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        transition: all 0.3s;
+    }
+
+    .tech-checkbox-item:hover {
+        background: var(--bg-secondary);
+        border-color: var(--accent-color);
+    }
+
+    .tech-checkbox-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .tech-checkbox-item label {
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--text-primary);
+        flex: 1;
+    }
+
+    .custom-tech-input {
+        margin-top: 10px;
+        display: none;
+    }
+
+    .custom-tech-input.active {
+        display: block;
+    }
+
+    .custom-tech-input input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        border: 2px solid var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+    }
 </style>
 @endpush
 
@@ -959,6 +1088,64 @@
             input.value = opt.dataset.value;
             container.appendChild(input);
         });
+    }
+
+    function previewImage(input) {
+        const preview = document.getElementById('image-preview');
+        const img = document.getElementById('preview-img');
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            
+            // Validate file type
+            if (!file.type.match('image/(jpeg|jpg|png)')) {
+                alert('Please select a valid image file (JPG, JPEG, or PNG)');
+                input.value = '';
+                preview.style.display = 'none';
+                return;
+            }
+            
+            // Validate file size (2MB)
+            if (file.size > 2048 * 1024) {
+                alert('Image size must be less than 2MB');
+                input.value = '';
+                preview.style.display = 'none';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                img.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    function validatePdfFile(input) {
+        const errorDiv = document.getElementById('pdf-error');
+        errorDiv.style.display = 'none';
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            
+            // Validate file type
+            if (file.type !== 'application/pdf') {
+                errorDiv.textContent = 'Please select a valid PDF file';
+                errorDiv.style.display = 'block';
+                input.value = '';
+                return false;
+            }
+            
+            // Validate file size (5MB)
+            if (file.size > 5120 * 1024) {
+                errorDiv.textContent = 'PDF size must be less than 5MB';
+                errorDiv.style.display = 'block';
+                input.value = '';
+                return false;
+            }
+        }
+        return true;
     }
     
     // Initialize on page load
